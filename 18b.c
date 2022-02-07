@@ -1,11 +1,9 @@
-// does not work
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
 #define LEN 32
-#define QLEN 5120
+#define QLEN 10000
 
 int is_numeric(char*);
 long long get_value(char*, int);
@@ -17,13 +15,12 @@ long long q[2][QLEN];
 int qindex[2];
 int trailing_q_index[2];
 int command_index[2];
-int sndcount;
 
 
 void main(int argc, char *argv[])
 {
     alphabet[1]['p'-'a']=1;
-    
+
     char line[LEN];
     
     if (argc!=2) return;
@@ -64,23 +61,33 @@ void main(int argc, char *argv[])
 		a=command_index[0];
 		b=command_index[1];
 		
-		command_index[0] = process_line(lines[command_index[0]], 0, command_index[0]);
-		command_index[1] = process_line(lines[command_index[1]], 1, command_index[1]);
-    
+		for(int i=0;i<2;i++)
+			command_index[i] = process_line(lines[command_index[i]], i, command_index[i]);
+		 
 		if(a==command_index[0] && b==command_index[1])
 			break;
-
+		
 		if(command_index[0]<0 || command_index[0]>linecount)
 			break;
-			
-		if(command_index[1]<0 || command_index[1]>linecount)
-			break;			
-	}
-	for(int i=0;i<2;i++)
-		for(int j=0;j<qindex[i];j++)
-			printf("%lld ",q[i][qindex[i]]);
 		
-	printf("%d\n",sndcount);
+		if(command_index[1]<0 || command_index[1]>linecount)
+			break;
+		
+	}
+	
+	for(int i=0;i<2;i++)
+	{
+		for(int j=0;j<26;j++)
+			printf("%d ",alphabet[i][j]);
+		puts("");
+	}
+	
+	printf("commandindex0=%d commandindex=%d\n",command_index[0], command_index[1]);
+	printf("linecount=%d\n",linecount);
+	printf("qindex[0]=%d\n",qindex[0]);
+	printf("qindex[1]=%d\n",qindex[1]);
+	
+		
     return;
 }
 
@@ -103,8 +110,11 @@ long long get_value(char *token, int turn)
 }
 
 
-int process_line(char *line, int turn, int i)
+int process_line(char *original_line, int turn, int i)
 {
+	char *line=malloc(LEN);
+	strcpy(line, original_line);
+	
 	char *token1, *token2;
 
 	token1=strtok(line," ");
@@ -113,7 +123,6 @@ int process_line(char *line, int turn, int i)
 	{
 		token2=strtok(NULL," ");
 		q[1-turn][qindex[1-turn]++] = get_value(token2, turn);
-		if(turn) sndcount++;
 	}
 	
 	else if(strcmp(token1,"set")==0)
@@ -149,7 +158,7 @@ int process_line(char *line, int turn, int i)
 		token1=strtok(NULL," ");
 		if(trailing_q_index[turn] == qindex[turn])
 			return i;
-		alphabet[turn][token1[0]-'a'] = q[turn][qindex[turn]];
+		alphabet[turn][token1[0]-'a'] = q[turn][trailing_q_index[turn]++];
 	}
 	
 	else if(strcmp(token1,"jgz")==0)
